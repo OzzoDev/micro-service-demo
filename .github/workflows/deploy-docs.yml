@@ -1,0 +1,147 @@
+name: Deploy Docs to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "api/**"
+      - "auth/**"
+      - ".github/workflows/deploy-docs.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies for API
+        run: npm install --prefix ./api
+
+      - name: Install dependencies for Auth
+        run: npm install --prefix ./auth
+
+      - name: Create docs directory
+        run: mkdir -p docs
+
+      - name: Copy API Swagger docs
+        run: |
+          if [ -f "./api/swagger.json" ]; then
+            cp ./api/swagger.json ./docs/api-swagger.json
+          elif [ -f "./api/swagger.yaml" ]; then
+            cp ./api/swagger.yaml ./docs/api-swagger.yaml
+          fi
+
+      - name: Copy Auth Swagger docs
+        run: |
+          if [ -f "./auth/swagger.json" ]; then
+            cp ./auth/swagger.json ./docs/auth-swagger.json
+          elif [ -f "./auth/swagger.yaml" ]; then
+            cp ./auth/swagger.yaml ./docs/auth-swagger.yaml
+          fi
+
+      - name: Create Swagger UI HTML
+        run: |
+          cat > docs/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>API Documentation</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui.min.css">
+            <style>
+              body { margin: 0; padding: 0; }
+              .api-selector {
+                background: #1b1b1b;
+                padding: 20px;
+                text-align: center;
+              }
+              .api-selector button {
+                margin: 0 10px;
+                padding: 10px 20px;
+                font-size: 16px;
+                cursor: pointer;
+                background: #4990e2;
+                color: white;
+                border: none;
+                border-radius: 4px;
+              }
+              .api-selector button:hover {
+                background: #357abd;
+              }
+              .api-selector button.active {
+                background: #2d5f8d;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="api-selector">
+              <h1 style="color: white; margin: 0 0 20px 0;">API Documentation</h1>
+              <button id="api-btn" class="active" onclick="loadAPI('api')">API Service</button>
+              <button id="auth-btn" onclick="loadAPI('auth')">Auth Service</button>
+            </div>
+            <div id="swagger-ui"></div>
+            
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui-bundle.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui-standalone-preset.min.js"></script>
+            <script>
+              let currentUI = null;
+              
+              function loadAPI(service) {
+                document.getElementById('api-btn').classList.remove('active');
+                document.getElementById('auth-btn').classList.remove('active');
+                document.getElementById(service + '-btn').classList.add('active');
+                
+                const jsonUrl = `./${service}-swagger.json`;
+                const yamlUrl = `./${service}-swagger.yaml`;
+                
+                fetch(jsonUrl)
+                  .then(response => {
+                    if (response.ok) return jsonUrl;
+                    return yamlUrl;
+                  })
+                  .then(url => {
+                    currentUI = SwaggerUIBundle({
+                      url: url,
+                      dom_id: '#swagger-ui',
+                      deepLinking: true,
+                      presets: [
+                        SwaggerUIBundle.presets.apis,
+                        SwaggerUIStandalonePreset
+                      ],
+                      layout: "StandaloneLayout"
+                    });
+                  });
+              }
+              
+              // Load API docs by default
+              loadAPI('api');
+            </script>
+          </body>
+          </html>
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "./docs"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
