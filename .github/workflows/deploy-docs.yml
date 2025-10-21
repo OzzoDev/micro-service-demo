@@ -127,7 +127,6 @@ jobs:
                   });
               }
               
-              // Load API docs by default
               loadAPI('api');
             </script>
           </body>

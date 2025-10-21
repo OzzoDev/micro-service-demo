@@ -5,6 +5,7 @@ import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import express from "express";
 import fs from "fs";
+import yaml from "yaml";
 
 const port = 3002;
 const app = new Hono();
@@ -32,6 +33,7 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 fs.writeFileSync("./swagger.json", JSON.stringify(swaggerSpec, null, 2));
+fs.writeFileSync("./swagger.yaml", yaml.stringify(swaggerSpec));
 
 const expressApp = express();
 expressApp.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

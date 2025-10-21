@@ -6,6 +6,7 @@ import swaggerUi from "swagger-ui-express";
 import express from "express";
 import fs from "fs";
 import pkg from "pg";
+import yaml from "yaml";
 
 const { Pool } = pkg;
 const port = 3001;
@@ -39,6 +40,7 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 fs.writeFileSync("./swagger.json", JSON.stringify(swaggerSpec, null, 2));
+fs.writeFileSync("./swagger.yaml", yaml.stringify(swaggerSpec));
 
 const expressApp = express();
 expressApp.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
