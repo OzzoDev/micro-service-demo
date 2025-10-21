@@ -1,0 +1,50 @@
+name: Build and Test Backend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  node-build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service: [api, auth] # Run job for both services
+
+    steps:
+      # Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Cache Node.js dependencies per service
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ matrix.service }}-${{ hashFiles('${{ matrix.service }}/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.service }}-
+
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: ./${{ matrix.service }}/package-lock.json
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm ci --prefix ./${{ matrix.service }}
+
+      # Run tests
+      - name: Run tests
+        run: npm run test --prefix ./${{ matrix.service }}
+
+      # Build project
+      - name: Build project
+        run: npm run build --prefix ./${{ matrix.service }}
