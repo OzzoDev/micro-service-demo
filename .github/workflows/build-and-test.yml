@@ -14,11 +14,11 @@ jobs:
         service: [api, auth] # Run job for both services
 
     steps:
-      # 1️⃣ Checkout repository
+      # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ Cache Node.js dependencies per service
+      # Cache Node.js dependencies per service
       - name: Cache Node.js modules
         uses: actions/cache@v3
         with:
@@ -29,7 +29,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-${{ matrix.service }}-
 
-      # 3️⃣ Setup Node.js
+      # Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -37,14 +37,14 @@ jobs:
           cache: "npm"
           cache-dependency-path: ./${{ matrix.service }}/package-lock.json
 
-      # 4️⃣ Install dependencies using npm install
+      # Install dependencies using npm install
       - name: Install dependencies
         run: npm install --prefix ./${{ matrix.service }}
 
-      # 5️⃣ Run tests
+      # Run tests
       - name: Run tests
         run: npm run test --prefix ./${{ matrix.service }}
 
-      # 6️⃣ Build project
+      # Build project
       - name: Build project
         run: npm run build --prefix ./${{ matrix.service }}
