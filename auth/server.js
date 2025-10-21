@@ -1,18 +1,32 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
+import pkg from "pg";
+
+const { Pool } = pkg;
 
 const port = 3001;
 const app = new Hono();
 
-const user = {
-  name: "User",
-  email: "user@gmail.com",
-};
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 app.get("/", (c) => c.text("Hello Hono auth! 🚀"));
 
-app.get("/auth/sign-in", (c) => {
-  return c.json({ message: `Login successful`, user });
+app.get("/auth/sign-in", async (c) => {
+  try {
+    const result = await pool.query("SELECT id, name, email FROM users LIMIT 1");
+
+    if (result.rows.length === 0) {
+      return c.json({ message: "No user found" }, 404);
+    }
+
+    const user = result.rows[0];
+    return c.json({ message: "Login successful", user });
+  } catch (err) {
+    console.error("Database query error:", err);
+    return c.json({ message: "Internal server error" }, 500);
+  }
 });
 
 serve(

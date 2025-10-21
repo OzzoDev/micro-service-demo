@@ -1,14 +1,15 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 
-const port = 3000;
+const port = 3002;
 const app = new Hono();
 
 app.get("/", (c) => c.text("Hello Hono API! 🚀"));
 
 app.get("/api/me", async (c) => {
   try {
-    const res = await fetch("http://localhost:3001/auth/sign-in");
+    const res = await fetch("http://auth:3001/auth/sign-in");
+
     const authData = await res.json();
 
     return c.json({
