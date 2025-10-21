@@ -1,4 +1,4 @@
-name: Build and Test Services
+name: Build and Test Backend
 
 on:
   push:
@@ -11,14 +11,12 @@ jobs:
 
     strategy:
       matrix:
-        service: [api, auth, app] # include frontend
+        service: [api, auth]
 
     steps:
-      # 1️⃣ Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ Cache Node.js dependencies per service
       - name: Cache Node.js modules
         uses: actions/cache@v3
         with:
@@ -29,7 +27,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-${{ matrix.service }}-
 
-      # 3️⃣ Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -37,29 +34,15 @@ jobs:
           cache: "npm"
           cache-dependency-path: ./${{ matrix.service }}/package-lock.json
 
-      # 4️⃣ Install dependencies
       - name: Install dependencies
         run: npm install --prefix ./${{ matrix.service }}
 
-      # 5️⃣ Run tests
       - name: Run tests
-        run: |
-          if [ "${{ matrix.service }}" = "app" ]; then
-            npm run test --prefix ./app -- --run
-          else
-            npm run test --prefix ./${{ matrix.service }}
-          fi
+        run: npm run test --prefix ./${{ matrix.service }}
 
-      # 6️⃣ Build project
       - name: Build project
-        run: |
-          if [ "${{ matrix.service }}" = "app" ]; then
-            npm run build --prefix ./app
-          else
-            npm run build --prefix ./${{ matrix.service }}
-          fi
+        run: npm run build --prefix ./${{ matrix.service }}
 
-      # 7️⃣ Build Docker image
       - name: Build Docker image
         run: |
           IMAGE_NAME=${{ matrix.service }}-image:latest

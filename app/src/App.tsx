@@ -32,6 +32,7 @@ function App() {
         alignItems: "center",
         height: "100vh",
         textAlign: "center",
+        background: "blue",
       }}>
       <button onClick={handleSignIn}>Sign In</button>
       <p>{message}</p>
