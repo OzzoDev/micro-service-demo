@@ -1,11 +1,15 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
+import { cors } from "hono/cors";
+
 import pkg from "pg";
 
 const { Pool } = pkg;
 
 const port = 3001;
 const app = new Hono();
+
+app.use("*", cors());
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,

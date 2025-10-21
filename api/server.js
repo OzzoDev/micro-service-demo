@@ -1,8 +1,11 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
+import { cors } from "hono/cors";
 
 const port = 3002;
 const app = new Hono();
+
+app.use("*", cors());
 
 app.get("/", (c) => c.text("Hello Hono API! 🚀"));
 
