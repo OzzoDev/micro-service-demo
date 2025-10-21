@@ -1,8 +1,7 @@
-import request from "supertest";
-import { Hono } from "hono";
+const request = require("supertest");
+const { Hono } = require("hono");
 
 const app = new Hono();
-
 app.get("/", (c) => c.text("Hello Hono auth! 🚀"));
 
 describe("Auth root endpoint", () => {
